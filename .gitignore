@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.env
+cache/regime_data.json
+.DS_Store
+*.egg-info/
+dist/
+test_spy.py
+test_multi.py

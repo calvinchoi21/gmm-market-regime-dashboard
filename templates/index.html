@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Regime Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- ── Top Bar ── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">GMM<span class="accent">|</span>REGIME</span>
+      <span class="topbar-sub">Market Regime Detection &amp; Sector Rotation</span>
+    </div>
+    <div class="topbar-right">
+      <span class="data-pill" id="data-through-pill">DATA THROUGH —</span>
+      <span class="data-pill" id="refresh-pill">REFRESHED —</span>
+      <div class="status-dot" id="status-dot"></div>
+    </div>
+  </header>
+
+  <!-- ── Loading Overlay ── -->
+  <div id="loading-overlay">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <div class="loading-title">INITIALISING PIPELINE</div>
+      <div class="loading-sub" id="loading-msg">Fetching market data &amp; running GMM clustering…</div>
+    </div>
+  </div>
+
+  <!-- ── Main Layout ── -->
+  <main id="main-content" class="hidden">
+
+    <!-- ── Regime Hero Banner ── -->
+    <section class="regime-hero" id="regime-hero">
+      <div class="regime-hero-left">
+        <div class="hero-label">CURRENT MARKET REGIME</div>
+        <div class="hero-regime-name" id="hero-regime-name">—</div>
+        <div class="hero-confidence">
+          <span class="conf-label">GMM CONFIDENCE</span>
+          <span class="conf-value" id="hero-confidence">—</span>
+        </div>
+      </div>
+      <div class="regime-hero-right">
+        <div class="macro-grid">
+          <div class="macro-cell">
+            <div class="macro-label">VIX</div>
+            <div class="macro-value" id="snap-vix">—</div>
+          </div>
+          <div class="macro-cell">
+            <div class="macro-label">RSI (14)</div>
+            <div class="macro-value" id="snap-rsi">—</div>
+          </div>
+          <div class="macro-cell">
+            <div class="macro-label">YIELD CURVE 10Y–2Y</div>
+            <div class="macro-value" id="snap-yc2y">—</div>
+          </div>
+          <div class="macro-cell">
+            <div class="macro-label">YIELD CURVE 10Y–3M</div>
+            <div class="macro-value" id="snap-yc3m">—</div>
+          </div>
+          <div class="macro-cell">
+            <div class="macro-label">SMA RATIO (50/200)</div>
+            <div class="macro-value" id="snap-sma">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Portfolio Performance ── -->
+    <section class="dash-section">
+      <div class="section-header">
+        <div class="section-title">PORTFOLIO PERFORMANCE <span class="section-sub">$100,000 Initial Capital · 2000 – Present</span></div>
+        <div class="capital-input-row">
+          <label class="capital-label">INITIAL CAPITAL $</label>
+          <input type="number" id="capital-input" class="capital-input" value="100000" min="1000" step="1000">
+        </div>
+      </div>
+      <div class="perf-stats-row" id="perf-stats-row">
+        <div class="perf-stat gmm-color">
+          <div class="ps-label">GMM STRATEGY</div>
+          <div class="ps-value" id="ps-gmm-val">—</div>
+          <div class="ps-return" id="ps-gmm-ret">—</div>
+        </div>
+        <div class="perf-stat spy-color">
+          <div class="ps-label">S&amp;P 500 BENCHMARK</div>
+          <div class="ps-value" id="ps-spy-val">—</div>
+          <div class="ps-return" id="ps-spy-ret">—</div>
+        </div>
+        <div class="perf-stat outperf-color">
+          <div class="ps-label">OUTPERFORMANCE</div>
+          <div class="ps-value" id="ps-outperf">—</div>
+          <div class="ps-return" id="ps-outperf-pct">vs benchmark</div>
+        </div>
+      </div>
+      <div class="chart-container" id="portfolio-chart-container">
+        <svg id="portfolio-chart"></svg>
+      </div>
+    </section>
+
+    <!-- ── Two Column: Allocation + Regime Cards ── -->
+    <div class="two-col-row">
+
+      <!-- Current Allocation -->
+      <section class="dash-section half">
+        <div class="section-header">
+          <div class="section-title">CURRENT ALLOCATION <span class="section-sub" id="alloc-regime-label">—</span></div>
+        </div>
+        <div class="alloc-layout">
+          <svg id="alloc-donut"></svg>
+          <div class="alloc-legend" id="alloc-legend"></div>
+        </div>
+      </section>
+
+      <!-- Regime Cards -->
+      <section class="dash-section half">
+        <div class="section-header">
+          <div class="section-title">REGIME PROFILES <span class="section-sub">Historical Frequency & Characteristics</span></div>
+        </div>
+        <div class="regime-cards" id="regime-cards"></div>
+      </section>
+
+    </div>
+
+    <!-- ── Regime Timeline ── -->
+    <section class="dash-section">
+      <div class="section-header">
+        <div class="section-title">REGIME TIMELINE <span class="section-sub">2000 – Present · Color bands = detected regime</span></div>
+        <label class="toggle-label">
+          <input type="checkbox" id="spy-overlay-toggle" checked>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          S&amp;P 500 overlay
+        </label>
+      </div>
+      <div class="chart-container" id="timeline-chart-container">
+        <svg id="timeline-chart"></svg>
+      </div>
+    </section>
+
+    <!-- ── Sharpe Heatmap ── -->
+    <section class="dash-section">
+      <div class="section-header">
+        <div class="section-title">SECTOR SHARPE RATIOS <span class="section-sub">Annualised risk-adjusted returns by regime</span></div>
+      </div>
+      <div class="chart-container heatmap-container" id="heatmap-container">
+        <svg id="heatmap-chart"></svg>
+      </div>
+    </section>
+
+    <!-- ── Footer ── -->
+    <footer class="dash-footer">
+      <span>Data: Yahoo Finance · FRED (Federal Reserve Economic Data)</span>
+      <span>Model: Gaussian Mixture Model (K=5) · PCA (95% variance) · 4-day smoothing</span>
+      <span>Built by Calvin Choi</span>
+    </footer>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/portfolio.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/timeline.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/heatmap.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/allocation.js') }}"></script>
+</body>
+</html>
