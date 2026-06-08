@@ -83,7 +83,7 @@ def api_data():
     return jsonify(data)
 
 
-@app.route("/api/refresh", methods=["POST"])
+@app.route("/api/refresh", methods=["GET", "POST"])
 def api_refresh():
     """Manual trigger for refresh (admin use)."""
     t = threading.Thread(target=refresh_cache, daemon=True)
